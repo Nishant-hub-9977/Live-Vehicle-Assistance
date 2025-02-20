@@ -1,0 +1,228 @@
+### **🚀 Ultimate Replit Prompt: Build a Full-Stack Roadside Vehicle Assistance Web App from Scratch Using MERN Stack with PostgreSQL, TailwindCSS, Google APIs, and Real-Time Features** 🚀  
+
+**Objective:**  
+Develop a fully functional **Uber/Zomato-like Roadside Vehicle Assistance** web application using **MERN stack (MongoDB, Express.js, React.js, Node.js)** with **PostgreSQL as the database**, **TailwindCSS for UI**, **Google APIs for authentication & live tracking**, and **WebSockets for real-time communication**. The application should be **fully responsive**, support **role-based dashboards**, include **secure online payments**, and **seamlessly integrate backend & frontend with offline mode support**.  
+
+---
+
+### **🛠️ Tech Stack**
+- **Frontend**: React.js (Vite), TailwindCSS, React Query, Google Maps API, Firebase.
+- **Backend**: Node.js, Express.js, WebSockets, JWT Authentication.
+- **Database**: PostgreSQL (via Supabase), Prisma ORM.
+- **Authentication**: Google OAuth 2.0.
+- **Payments**: UPI, QR Code, Stripe Integration.
+- **Hosting & Deployment**: Replit + GitHub Codespaces.
+
+---
+
+## **📌 Core Features & Requirements**
+### **1. General Features**
+✅ **Sleek, Responsive UI** (like Uber/Zomato).  
+✅ **Google OAuth Login** for all users.  
+✅ **Three Role-Based Dashboards**:  
+   - **Clients (Service Takers)**
+   - **Mechanics (Service Providers)**
+   - **Admin (Superuser, approves mechanics & manages system).**  
+✅ **Live Tracking via Google Maps API.**  
+✅ **Secure Online Payments (QR, UPI, Card, Wallets).**  
+✅ **Offline Mode & Data Sync:**  
+   - Users can send service requests while offline.
+   - Requests sync automatically when they regain internet.  
+✅ **Real-Time WebSockets** for updates & notifications.  
+
+---
+
+### **2. Authentication System (Google OAuth)**
+✅ **Login & Register using Google OAuth 2.0**.  
+✅ **JWT-based session management** for security.  
+✅ **Admin has full control over approving/rejecting mechanics.**  
+
+---
+
+### **3. Admin Dashboard**
+✅ **Approve or reject mechanic registrations**.  
+✅ **Monitor all transactions, users, and services**.  
+✅ **Manage payment disputes & generate analytics reports**.  
+
+---
+
+### **4. Mechanic Dashboard**
+✅ **Registration with approval process** (Mechanics submit documents like Aadhaar, License).  
+✅ **List of assigned service requests** with live tracking.  
+✅ **Status Management**: `Pending`, `In Progress`, `Completed`.  
+✅ **Mechanic Profile Management**.  
+✅ **Earnings Overview & Payment History**.  
+✅ **QR Code Generation for Payment Requests**.  
+
+---
+
+### **5. Client Dashboard**
+✅ **Find & Request Nearest Mechanics (Google Maps API)**.  
+✅ **Live tracking of assigned mechanics**.  
+✅ **Request approval/rejection notifications**.  
+✅ **Service History & Payment Records**.  
+✅ **Profile Management**.  
+✅ **Secure Payments (UPI, QR Code, Stripe, Cards).**  
+
+---
+
+### **6. Real-Time Functionalities**
+✅ **WebSockets for instant service request updates**.  
+✅ **Push Notifications for request status changes**.  
+✅ **Live tracking with route visualization (Google Maps API).**  
+✅ **Automatic Sync when offline users come back online.**  
+
+---
+
+### **7. UI/UX Design (Uber-Like)**
+✅ **Beautiful, Minimal, & User-Friendly Design (TailwindCSS).**  
+✅ **Dark Mode Support**.  
+✅ **Dynamic Animations & Transitions** for better UX.  
+
+---
+
+## **🛠️ Step-by-Step Instructions for Replit Setup**
+### **🔹 1. Initialize the Project**
+```bash
+npx create-react-app roadside-assistance --template redux
+cd roadside-assistance
+npm install
+```
+---
+
+### **🔹 2. Install Required Dependencies**
+```bash
+npm install express cors axios react-router-dom dotenv tailwindcss @tanstack/react-query @supabase/supabase-js socket.io stripe google-maps-react
+```
+---
+
+### **🔹 3. Configure PostgreSQL & Prisma**
+```bash
+npm install @prisma/client @supabase/supabase-js pg
+npx prisma init
+```
+- Define the **PostgreSQL schema** in `prisma/schema.prisma`:
+```prisma
+model User {
+  id    String  @id @default(uuid())
+  name  String
+  email String  @unique
+  role  String  // "client" | "mechanic" | "admin"
+}
+
+model Mechanic {
+  id          String @id @default(uuid())
+  userId      String
+  services    String
+  rating      Float
+  location    String
+  approved    Boolean @default(false)
+}
+```
+---
+
+### **🔹 4. Setup Google OAuth in `.env`**
+```env
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+JWT_SECRET=your-jwt-secret
+```
+---
+
+### **🔹 5. Create Backend in `server.js`**
+```js
+import express from "express";
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+
+dotenv.config();
+const app = express();
+const prisma = new PrismaClient();
+
+app.use(cors());
+app.use(express.json());
+
+// Google OAuth Endpoint
+app.post("/auth/google", async (req, res) => {
+  const { token } = req.body;
+  const user = await verifyGoogleToken(token);
+  res.json(user);
+});
+
+app.listen(5000, () => console.log("Server running on port 5000"));
+```
+---
+
+### **🔹 6. Implement Google Maps API**
+```js
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+const MapComponent = ({ location }) => {
+  return (
+    <LoadScript googleMapsApiKey={process.env.GOOGLE_API_KEY}>
+      <GoogleMap center={location} zoom={15}>
+        <Marker position={location} />
+      </GoogleMap>
+    </LoadScript>
+  );
+};
+```
+---
+
+### **🔹 7. Deploy Backend & Frontend**
+**Backend:**
+```bash
+cd backend
+node server.js
+```
+**Frontend:**
+```bash
+cd frontend
+npm start
+```
+---
+
+### **🔹 8. Push to GitHub & Deploy in Replit**
+```bash
+git init
+git add .
+git commit -m "Initial Commit: Roadside Assistance App"
+git branch -M main
+git remote add origin https://github.com/yourusername/roadside-assistance.git
+git push -u origin main
+```
+- Open **Replit** > **Import from GitHub**.
+- Configure **PostgreSQL, Supabase, Google OAuth**.
+- Run the app.
+
+---
+
+## **🚀 Deploy & Scale with Docker**
+```dockerfile
+FROM node:18
+WORKDIR /app
+COPY package.json ./
+RUN npm install
+COPY . .
+CMD ["node", "server.js"]
+EXPOSE 5000
+```
+Build & Run:
+```bash
+docker build -t roadside-assistance .
+docker run -p 5000:5000 roadside-assistance
+```
+
+---
+
+## **🚀 Summary & Final Execution**
+This **ultimate Replit prompt** ensures:
+✅ **Seamless Backend-Frontend Integration**  
+✅ **Live Tracking, Payments, & Authentication**  
+✅ **Offline Mode with Syncing**  
+✅ **Error Handling & Security**  
+✅ **GitHub Codespaces & Replit Deployment**  
+
+---
+#### **🔥 Ready to Build? Let’s Go!** 🚀

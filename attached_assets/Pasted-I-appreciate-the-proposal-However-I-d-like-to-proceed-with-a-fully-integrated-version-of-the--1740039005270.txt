@@ -1,0 +1,48 @@
+I appreciate the proposal! However, I’d like to proceed with a **fully integrated** version of the **Roadside Assistance Platform** rather than a simplified MVP. Please ensure that all core functionalities are seamlessly implemented and integrate advanced real-time features from the beginning.
+
+✅ **Build the complete prototype with all core & advanced features**  
+✅ **Use MERN stack with PostgreSQL as the primary database**  
+✅ **Ensure full compatibility with all screen sizes & devices**  
+
+**🔹 Authentication & User Roles:**  
+- Implement **Google OAuth 2.0** for authentication instead of basic username/password login.  
+- **Three role-based dashboards**: **Clients (Service Takers), Mechanics (Service Providers), and Admin (Superuser).**  
+- Admin should have the ability to approve/reject mechanics before they can use the system.  
+
+**🔹 Real-Time WebSocket Integration:**  
+- Enable **live tracking** of both **clients and mechanics** using **Google Maps API**.  
+- Implement **instant status updates** for service requests.  
+- Ensure **real-time notifications** when a service request is sent, accepted, or completed.  
+
+**🔹 Payment Processing & Secure Transactions:**  
+- Integrate **Stripe, UPI, QR Code Payments, and Card Transactions** for seamless service payments.  
+- Mechanics should be able to generate a **QR code** for clients to scan and pay securely.  
+- Ensure a **detailed transaction history** for both **mechanics and clients**.  
+
+**🔹 Offline Mode Support & Syncing:**  
+- Clients should be able to **request assistance even when offline**, and their request should sync once online.  
+- Ensure **queueing of requests in offline mode** for a smooth user experience.  
+
+**🔹 Advanced Tracking & Mechanic Selection:**  
+- Enable **live location tracking for both mechanics and clients**.  
+- Implement an **intelligent nearest-mechanic selection system** using Google Maps API & distance calculations.  
+- Allow clients to **view available mechanics with green dot indicators** for online mechanics.  
+
+**🔹 Professional UI/UX with TailwindCSS:**  
+- Use **shadcn/ui** and **TailwindCSS** to design a sleek, Uber/Zomato-like interface.  
+- Ensure an **interactive and smooth UI/UX** with modern animations & transitions.  
+
+**🔹 Database & Backend Infrastructure:**  
+- Use **PostgreSQL** (via Supabase) for database management instead of MongoDB.  
+- Implement **Prisma ORM** for structured and scalable database interactions.  
+- Ensure **secure API authentication** with JWT & role-based access control.  
+
+**Additional Requirements:**  
+- **Push Notifications** for real-time updates & alerts.  
+- **Service Status Updates** (`Pending`, `In Progress`, `Completed`) managed by mechanics.  
+- **Mechanic Profile Verification** with required documents (Aadhaar, License, Garage Address).  
+- **Client Vehicle Details Submission** during service requests.  
+
+🔹 **Final Deployment:** Ensure that this project is built with **scalability in mind**, allowing for smooth deployment on **Replit, GitHub Codespaces, and cloud hosting platforms**.
+
+**📌 Proceed with full implementation instead of a limited MVP, integrating all requested functionalities.** 🚀
