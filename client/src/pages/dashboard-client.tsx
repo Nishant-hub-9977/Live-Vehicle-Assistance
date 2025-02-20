@@ -9,14 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { insertServiceRequestSchema, type ServiceRequest } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Clock, AlertCircle } from "lucide-react";
+import { MapPin, Calendar, Clock, AlertCircle, Car, Wrench, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { LocationPicker } from "@/components/maps/location-picker";
 
 export default function DashboardClient() {
   const { toast } = useToast();
 
-  const { data: requests } = useQuery<ServiceRequest[]>({
+  const { data: requests, isLoading: isLoadingRequests } = useQuery<ServiceRequest[]>({
     queryKey: ["/api/service-requests"],
   });
 
@@ -53,72 +53,137 @@ export default function DashboardClient() {
     completed: "bg-green-500",
   };
 
+  const activeRequest = requests?.find(r => r.status !== 'completed');
+
   return (
     <DashboardLayout>
       <div className="grid gap-8 md:grid-cols-2">
+        {/* Left Column */}
+        <div className="space-y-8">
+          {/* Active Request Status */}
+          {activeRequest ? (
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Active Service Request
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1 rounded-full text-xs text-white font-medium ${
+                      statusColors[activeRequest.status as keyof typeof statusColors]
+                    }`}>
+                      {activeRequest.status.toUpperCase()}
+                    </span>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-1" />
+                      {format(new Date(activeRequest.created), "HH:mm")}
+                    </div>
+                  </div>
+                  <p className="text-sm">{activeRequest.description}</p>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Current Location
+                  </div>
+                  {/* Add map component here to show active request location */}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Request Assistance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((data) => createRequestMutation.mutate(data))}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>What's the issue?</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe your vehicle problem..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Location</FormLabel>
+                          <FormControl>
+                            <LocationPicker
+                              onLocationSelect={(location) => {
+                                field.onChange(location);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={createRequestMutation.isPending}
+                    >
+                      <Wrench className="h-4 w-4 mr-2" />
+                      Request Assistance
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Service Statistics */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Statistics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-secondary rounded-lg">
+                  <p className="text-3xl font-bold">{requests?.length || 0}</p>
+                  <p className="text-sm text-muted-foreground">Total Requests</p>
+                </div>
+                <div className="text-center p-4 bg-secondary rounded-lg">
+                  <p className="text-3xl font-bold">
+                    {requests?.filter(r => r.status === 'completed').length || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Service History */}
         <Card>
           <CardHeader>
-            <CardTitle>Request Assistance</CardTitle>
+            <CardTitle>Service History</CardTitle>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((data) => createRequestMutation.mutate(data))}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>What's the issue?</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe your vehicle problem..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Location</FormLabel>
-                      <FormControl>
-                        <LocationPicker
-                          onLocationSelect={(location) => {
-                            field.onChange(location);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createRequestMutation.isPending}
-                >
-                  Submit Request
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>My Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {requests?.length === 0 ? (
+            {isLoadingRequests ? (
+              <div className="flex items-center justify-center p-8">
+                <Clock className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : requests?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="mx-auto h-8 w-8 mb-2" />
                 <p>No service requests yet</p>
@@ -128,21 +193,17 @@ export default function DashboardClient() {
                 {requests?.map((request) => (
                   <div
                     key={request.id}
-                    className="p-4 border rounded-lg space-y-2"
+                    className="p-4 border rounded-lg space-y-2 hover:bg-secondary/50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`px-2 py-1 rounded text-xs text-white font-medium ${
-                          statusColors[request.status as keyof typeof statusColors]
-                        }`}
-                      >
+                      <span className={`px-2 py-1 rounded text-xs text-white font-medium ${
+                        statusColors[request.status as keyof typeof statusColors]
+                      }`}>
                         {request.status.toUpperCase()}
                       </span>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 mr-1" />
                         {format(new Date(request.created), "MMM d, yyyy")}
-                        <Clock className="h-4 w-4 ml-4 mr-1" />
-                        {format(new Date(request.created), "HH:mm")}
                       </div>
                     </div>
                     <p className="text-sm">{request.description}</p>
@@ -150,6 +211,12 @@ export default function DashboardClient() {
                       <MapPin className="h-4 w-4 mr-1" />
                       {request.location.lat.toFixed(6)}, {request.location.lng.toFixed(6)}
                     </div>
+                    {request.status === 'completed' && (
+                      <div className="flex items-center text-sm text-green-500">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Service Completed
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
