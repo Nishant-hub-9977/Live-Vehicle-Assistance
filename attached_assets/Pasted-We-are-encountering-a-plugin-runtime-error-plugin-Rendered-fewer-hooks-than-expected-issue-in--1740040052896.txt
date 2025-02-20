@@ -1,0 +1,85 @@
+We are encountering a **[plugin:runtime-error-plugin] Rendered fewer hooks than expected** issue in our React application. This error is likely caused by:
+1. **An accidental early return statement** in a React functional component.
+2. **A conditional hook execution**, meaning a `useState`, `useEffect`, or other hooks are inside a conditional block or loop.
+3. **A component not being properly wrapped in the expected structure**, leading to an inconsistent hook execution order.
+
+### **🔹 Steps to Debug and Fix**
+1. **Scan All React Components for Conditional Hook Calls**
+   - Check all functional components (especially inside `dashboard/client`).
+   - Ensure **hooks are not inside** an `if` statement, `for` loop, or conditionally executed code.
+   - Example of incorrect hook usage:
+     ```js
+     if (someCondition) {
+         const [state, setState] = useState(null); // ❌ Incorrect
+     }
+     ```
+
+   - Instead, refactor as:
+     ```js
+     const [state, setState] = useState(null);
+     if (someCondition) {
+         // Handle condition here
+     }
+     ```
+
+2. **Check for Early Returns in Functional Components**
+   - Identify if a component has an early `return null;` before hooks are executed.
+   - Example:
+     ```js
+     const MyComponent = () => {
+         if (!someCondition) return null; // ❌ Incorrect
+         useEffect(() => { ... }, []);
+         return <div>Rendered Content</div>;
+     };
+     ```
+   - Instead, refactor:
+     ```js
+     const MyComponent = () => {
+         const [state, setState] = useState(null);
+         if (!someCondition) return <div>Loading...</div>;
+         useEffect(() => { ... }, []);
+         return <div>Rendered Content</div>;
+     };
+     ```
+
+3. **Ensure Consistent Hook Order Across Renders**
+   - Hooks must be called in the same order **every time the component renders**.
+   - Example of incorrect code:
+     ```js
+     const MyComponent = () => {
+         if (someCondition) {
+             return <p>No Data</p>; // ❌ Incorrect, hooks are skipped
+         }
+         useEffect(() => { ... }, []);
+         return <div>Data Loaded</div>;
+     };
+     ```
+   - Instead, fix it by ensuring hooks always run:
+     ```js
+     const MyComponent = () => {
+         useEffect(() => { ... }, []);
+         if (someCondition) return <p>No Data</p>; // ✅ Hooks remain consistent
+         return <div>Data Loaded</div>;
+     };
+     ```
+
+4. **Inspect the `vite.config.js`**
+   - Check if **Hot Module Replacement (HMR) overlay is enabled**, which may be displaying this error.
+   - If the issue persists but does not break functionality, temporarily disable the overlay in `vite.config.js`:
+     ```js
+     export default defineConfig({
+       server: {
+         hmr: {
+           overlay: false, // Disable error overlay
+         },
+       },
+     });
+     ```
+   - Restart the app and check if the issue persists.
+
+---
+
+### **🔍 Debugging Steps**
+- Run the following command in the **Replit terminal** to check for component errors:
+  ```bash
+  npm run lint

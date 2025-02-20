@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,12 +25,6 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
 
-  // Redirect if already logged in
-  if (user) {
-    setLocation(`/dashboard/${user.role}`);
-    return null;
-  }
-
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,9 +38,21 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
-      role: undefined,
+      role: "client" as const,
     }
   });
+
+  // Handle redirect in useEffect
+  useEffect(() => {
+    if (user) {
+      setLocation(`/dashboard/${user.role}`);
+    }
+  }, [user, setLocation]);
+
+  // Early return with null only after all hooks are called
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex">
