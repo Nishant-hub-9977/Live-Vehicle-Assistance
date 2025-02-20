@@ -11,6 +11,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Car, Wrench, Shield } from "lucide-react";
+import { z } from "zod";
+
+const loginSchema = insertUserSchema.pick({ 
+  username: true, 
+  password: true 
+});
+
+type LoginData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -23,12 +31,21 @@ export default function AuthPage() {
     return null;
   }
 
-  const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema.pick({ username: true, password: true })),
+  const loginForm = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    }
   });
 
   const registerForm = useForm({
     resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      role: undefined,
+    }
   });
 
   return (
@@ -125,6 +142,7 @@ export default function AuthPage() {
                             <SelectContent>
                               <SelectItem value="client">Vehicle Owner</SelectItem>
                               <SelectItem value="mechanic">Mechanic</SelectItem>
+                              <SelectItem value="admin">Administrator</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

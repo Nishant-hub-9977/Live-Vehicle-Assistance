@@ -1,0 +1,93 @@
+💡 Objective: We have successfully integrated PostgreSQL authentication, UI/UX for login and registration, and role-based access control (Client, Mechanic, Admin). Now, we need to test, debug, and finalize all features to ensure everything functions correctly. Follow the step-by-step approach below.
+
+📝 Prompt for Replit Agent:
+plaintext
+Copy
+Edit
+We have successfully built the foundational aspects of our Roadside Assistance Platform using the MERN stack with PostgreSQL as the database. Now, we need to proceed with rigorous testing, debugging, and refinement of core functionalities.
+
+### **🔹 Step 1: Verify Authentication & Role-Based Access**
+1. **Test User Registration Flow**  
+   - Try registering users under all three roles (Client, Mechanic, Admin).  
+   - Validate that user data is correctly stored in the PostgreSQL database.  
+   - Ensure that Admin verification is required before a mechanic account is fully activated.  
+
+2. **Test Login Functionality**  
+   - Test login for all three roles and ensure proper redirection to respective dashboards.  
+   - Verify session persistence using JWT authentication or session storage.  
+
+3. **Validate Google OAuth Integration**  
+   - Attempt to log in using Google Sign-In.  
+   - Ensure new users signing in with Google get properly assigned roles and stored in PostgreSQL.  
+
+---
+
+### **🔹 Step 2: Test Mechanic Registration & Admin Approval Flow**
+1. **Register a Mechanic Account**  
+   - Fill in mechanic details (Garage Location, License Number, Aadhar, Service Types).  
+   - Check if data is stored in the ‘mechanics’ table in PostgreSQL.  
+   - Validate that a mechanic cannot access services until Admin approval.  
+
+2. **Admin Dashboard Actions**  
+   - Log in as Admin and view pending mechanic requests.  
+   - Approve or Reject a mechanic.  
+   - Ensure approved mechanics appear in the client dashboard when searching for assistance.  
+
+---
+
+### **🔹 Step 3: Verify Google Maps API & Live Tracking**
+1. **Test Client Requesting Assistance**  
+   - Register a Client, log in, and attempt to request help.  
+   - Verify that Google Maps API correctly fetches the client’s real-time location.  
+   - Ensure a mechanic receives a request if nearby.  
+
+2. **Mechanic Accepting Requests**  
+   - Log in as a mechanic and check for incoming service requests.  
+   - Accept a request and validate if both Client & Mechanic can track each other's location.  
+   - Ensure the live tracking line appears between Client and Mechanic.  
+
+---
+
+### **🔹 Step 4: Implement & Test Payment System**
+1. **Enable Payment Processing (UPI, QR Code, Stripe)**  
+   - Allow Clients to complete payments via UPI or Stripe.  
+   - Test QR Code generation by Mechanics after completing a job.  
+   - Verify that transactions get recorded in PostgreSQL (Payment History Table).  
+
+2. **Check Payment History Logs**  
+   - Clients should see past payments in their dashboard.  
+   - Mechanics should see their earnings for completed jobs.  
+
+---
+
+### **🔹 Step 5: Implement Offline Mode & WebSocket Debugging**
+1. **Test Offline Service Requests**  
+   - Enable offline mode in DevTools and attempt to send a service request.  
+   - Ensure the request is stored locally and synced when online.  
+
+2. **Fix Any WebSocket Errors in Real-Time Updates**  
+   - Validate that WebSockets properly push live updates to all dashboards.  
+   - Debug and fix any WebSocket errors logged in the console.  
+
+---
+
+### **🔹 Step 6: Push Code to GitHub Codespaces & Final Deployment**
+1. **Push Project to GitHub**  
+   - Ensure all local changes are committed and pushed to the GitHub repository.  
+   - Set up GitHub Codespaces for a cloud development environment.  
+
+2. **Deploy the Application**  
+   - Finalize hosting on **Replit Deployments** or **Vercel** (for the frontend) and **Railway/Render** (for the backend).  
+   - Run a final end-to-end test after deployment.  
+
+---
+
+### **🔍 Debugging & Fixing Errors**
+If any issues arise during these steps, provide **detailed logs and screenshots**.  
+Check console logs, network requests, WebSocket responses, and PostgreSQL queries to identify and resolve bugs.  
+If authentication or UI issues occur, confirm API requests and role-based access logic.
+
+---
+
+**Expected Outcome:**  
+By following these steps, our application will be **fully functional, role-based, real-time, location-integrated, payment-enabled, and deploy-ready.** 🚀
