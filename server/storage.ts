@@ -1,93 +1,87 @@
 import { IStorage } from "./types";
 import { User, InsertUser, ServiceRequest, InsertServiceRequest, Mechanic, InsertMechanic } from "@shared/schema";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users, serviceRequests, mechanics } from "@shared/schema";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private serviceRequests: Map<number, ServiceRequest>;
-  private mechanics: Map<number, Mechanic>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  currentId: number;
 
   constructor() {
-    this.users = new Map();
-    this.serviceRequests = new Map();
-    this.mechanics = new Map();
-    this.currentId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest> {
-    const id = this.currentId++;
-    const serviceRequest: ServiceRequest = { ...request, id };
-    this.serviceRequests.set(id, serviceRequest);
+    const [serviceRequest] = await db.insert(serviceRequests).values(request).returning();
     return serviceRequest;
   }
 
   async getServiceRequests(userId: number, role: string): Promise<ServiceRequest[]> {
-    return Array.from(this.serviceRequests.values()).filter(request => {
-      if (role === 'client') return request.clientId === userId;
-      if (role === 'mechanic') return request.mechanicId === userId;
-      return true; // admin sees all
-    });
+    if (role === 'admin') {
+      return await db.select().from(serviceRequests);
+    }
+    if (role === 'client') {
+      return await db.select().from(serviceRequests).where(eq(serviceRequests.clientId, userId));
+    }
+    return await db.select().from(serviceRequests).where(eq(serviceRequests.mechanicId, userId));
   }
 
   async updateServiceRequest(id: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest> {
-    const existing = this.serviceRequests.get(id);
-    if (!existing) throw new Error('Service request not found');
-    const updated = { ...existing, ...updates };
-    this.serviceRequests.set(id, updated);
+    const [updated] = await db
+      .update(serviceRequests)
+      .set(updates)
+      .where(eq(serviceRequests.id, id))
+      .returning();
+    if (!updated) throw new Error('Service request not found');
     return updated;
   }
 
   async createMechanic(mechanic: InsertMechanic): Promise<Mechanic> {
-    const id = this.currentId++;
-    const newMechanic: Mechanic = { ...mechanic, id };
-    this.mechanics.set(id, newMechanic);
+    const [newMechanic] = await db.insert(mechanics).values(mechanic).returning();
     return newMechanic;
   }
 
   async getMechanic(userId: number): Promise<Mechanic | undefined> {
-    return Array.from(this.mechanics.values()).find(
-      (mechanic) => mechanic.userId === userId,
-    );
+    const [mechanic] = await db.select().from(mechanics).where(eq(mechanics.userId, userId));
+    return mechanic;
   }
 
   async updateMechanic(id: number, updates: Partial<Mechanic>): Promise<Mechanic> {
-    const existing = this.mechanics.get(id);
-    if (!existing) throw new Error('Mechanic not found');
-    const updated = { ...existing, ...updates };
-    this.mechanics.set(id, updated);
+    const [updated] = await db
+      .update(mechanics)
+      .set(updates)
+      .where(eq(mechanics.id, id))
+      .returning();
+    if (!updated) throw new Error('Mechanic not found');
     return updated;
   }
 
   async getPendingMechanics(): Promise<Mechanic[]> {
-    return Array.from(this.mechanics.values()).filter(
-      (mechanic) => !mechanic.approved,
-    );
+    return await db.select().from(mechanics).where(eq(mechanics.approved, false));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
