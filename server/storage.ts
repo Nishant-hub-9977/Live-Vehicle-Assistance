@@ -9,6 +9,20 @@ import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
 
+export interface IStorage {
+  sessionStore: session.Store;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest>;
+  getServiceRequests(userId: number, role: string): Promise<ServiceRequest[]>;
+  updateServiceRequest(id: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest>;
+  createMechanic(mechanic: InsertMechanic): Promise<Mechanic>;
+  getMechanic(userId: number): Promise<Mechanic | undefined>;
+  updateMechanic(id: number, updates: Partial<Mechanic>): Promise<Mechanic>;
+  getPendingMechanics(): Promise<Mechanic[]>;
+}
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -60,7 +74,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMechanic(mechanic: InsertMechanic): Promise<Mechanic> {
-    const [newMechanic] = await db.insert(mechanics).values(mechanic).returning();
+    const [newMechanic] = await db.insert(mechanics).values([mechanic]).returning();
     return newMechanic;
   }
 
