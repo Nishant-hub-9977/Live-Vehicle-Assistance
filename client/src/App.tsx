@@ -6,18 +6,35 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "./pages/not-found";
 import AuthPage from "./pages/auth-page";
-import DashboardClient from "./pages/dashboard-client";
-import DashboardMechanic from "./pages/dashboard-mechanic";
-import DashboardAdmin from "./pages/dashboard-admin";
+
+// Import dashboard components
+import ClientDashboard from "./pages/dashboard/client";
+import MechanicDashboard from "./pages/dashboard/mechanic";
+import AdminDashboard from "./pages/dashboard/admin";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <AuthPage />} />
+      <Route path="/" component={() => {
+        return <AuthPage />;
+      }} />
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/dashboard/client" component={DashboardClient} />
-      <ProtectedRoute path="/dashboard/mechanic" component={DashboardMechanic} />
-      <ProtectedRoute path="/dashboard/admin" component={DashboardAdmin} />
+
+      {/* Client Routes */}
+      <ProtectedRoute path="/dashboard/client" component={ClientDashboard} />
+      <ProtectedRoute path="/dashboard/client/history" component={() => <ClientDashboard />} />
+      <ProtectedRoute path="/dashboard/client/payments" component={() => <ClientDashboard />} />
+
+      {/* Mechanic Routes */}
+      <ProtectedRoute path="/dashboard/mechanic" component={MechanicDashboard} />
+      <ProtectedRoute path="/dashboard/mechanic/history" component={() => <MechanicDashboard />} />
+      <ProtectedRoute path="/dashboard/mechanic/earnings" component={() => <MechanicDashboard />} />
+
+      {/* Admin Routes */}
+      <ProtectedRoute path="/dashboard/admin" component={AdminDashboard} />
+      <ProtectedRoute path="/dashboard/admin/mechanics" component={() => <AdminDashboard />} />
+      <ProtectedRoute path="/dashboard/admin/transactions" component={() => <AdminDashboard />} />
+
       <Route component={NotFound} />
     </Switch>
   );
