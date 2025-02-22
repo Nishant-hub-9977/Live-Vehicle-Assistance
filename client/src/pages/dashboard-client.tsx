@@ -103,7 +103,7 @@ export default function DashboardClient() {
               {activeRequest.status !== 'pending' && activeMechanic && (
                 <ServiceTracker 
                   serviceRequest={activeRequest}
-                  mechanicLocation={activeMechanic.activeLocation}
+                  mechanicLocation={activeMechanic.activeLocation || undefined}
                 />
               )}
             </div>

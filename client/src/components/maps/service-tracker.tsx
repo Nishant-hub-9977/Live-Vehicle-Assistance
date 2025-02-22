@@ -45,7 +45,7 @@ interface ServiceTrackerProps {
   isMechanic?: boolean;
 }
 
-const libraries: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ["places"];
+const libraries: ("places" | "drawing" | "geometry" | "visualization")[] = ["places"];
 
 export function ServiceTracker({ 
   serviceRequest, 
