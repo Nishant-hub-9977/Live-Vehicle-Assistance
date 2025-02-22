@@ -59,14 +59,14 @@ export function ServiceTracker({
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY!,
-    libraries: ["places", "directions"]
+    libraries: ["places"]
   });
 
   const calculateRoute = useCallback(async () => {
     if (!mechanicLocation) return;
 
     const directionsService = new google.maps.DirectionsService();
-    
+
     try {
       const result = await directionsService.route({
         origin: mechanicLocation,
@@ -75,7 +75,7 @@ export function ServiceTracker({
       });
 
       setDirections(result);
-      
+
       // Calculate ETA
       const duration = result.routes[0]?.legs[0]?.duration?.text;
       if (duration) {

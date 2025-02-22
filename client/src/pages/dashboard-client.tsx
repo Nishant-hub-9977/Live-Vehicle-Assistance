@@ -15,13 +15,14 @@ import { LocationPicker } from "@/components/maps/location-picker";
 import { ServiceTracker } from "@/components/maps/service-tracker";
 import { type Mechanic } from "@shared/schema";
 
-
 export default function DashboardClient() {
   const { toast } = useToast();
 
   const { data: requests, isLoading: isLoadingRequests } = useQuery<ServiceRequest[]>({
     queryKey: ["/api/service-requests"],
   });
+
+  const activeRequest = requests?.find(r => r.status !== 'completed');
 
   const { data: activeMechanic } = useQuery<Mechanic>({
     queryKey: ["/api/mechanics", activeRequest?.mechanicId],
@@ -61,8 +62,6 @@ export default function DashboardClient() {
     completed: "bg-green-500",
   };
 
-  const activeRequest = requests?.find(r => r.status !== 'completed');
-
   return (
     <DashboardLayout>
       <div className="grid gap-8 md:grid-cols-2">
@@ -101,10 +100,10 @@ export default function DashboardClient() {
               </Card>
 
               {/* Service Tracking Map */}
-              {activeRequest.status !== 'pending' && (
+              {activeRequest.status !== 'pending' && activeMechanic && (
                 <ServiceTracker 
                   serviceRequest={activeRequest}
-                  mechanicLocation={activeMechanic?.activeLocation}
+                  mechanicLocation={activeMechanic.activeLocation}
                 />
               )}
             </div>
