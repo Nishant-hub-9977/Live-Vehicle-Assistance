@@ -62,7 +62,9 @@ export class DatabaseStorage implements IStorage {
 
   // Service Requests with Pagination
   async createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest> {
-    const [serviceRequest] = await db.insert(serviceRequests).values(request).returning();
+    const [serviceRequest] = await db.insert(serviceRequests)
+      .values([request])  // Wrap in array to match expected type
+      .returning();
     return serviceRequest;
   }
 
@@ -108,7 +110,9 @@ export class DatabaseStorage implements IStorage {
 
   // Mechanic Management
   async createMechanic(mechanic: InsertMechanic): Promise<Mechanic> {
-    const [newMechanic] = await db.insert(mechanics).values(mechanic).returning();
+    const [newMechanic] = await db.insert(mechanics)
+      .values([mechanic])  // Wrap in array to match expected type
+      .returning();
     return newMechanic;
   }
 
@@ -127,31 +131,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getPendingMechanics(limit = 10, offset = 0): Promise<{
-    data: Mechanic[];
-    total: number;
-    page: number;
-    totalPages: number;
-  }> {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(mechanics)
-      .where(eq(mechanics.approved, false));
-
-    const data = await db
+  async getPendingMechanics(): Promise<Mechanic[]> {
+    const result = await db
       .select()
       .from(mechanics)
-      .where(eq(mechanics.approved, false))
-      .limit(limit)
-      .offset(offset)
-      .orderBy(mechanics.created);
-
-    return {
-      data,
-      total: count,
-      page: Math.floor(offset / limit) + 1,
-      totalPages: Math.ceil(count / limit)
-    };
+      .where(eq(mechanics.approved, false));
+    return result;
   }
 
   async getAvailableMechanics(limit = 10, offset = 0): Promise<{
@@ -236,31 +221,12 @@ export class DatabaseStorage implements IStorage {
     return payment;
   }
 
-  async getPaymentsByRequest(requestId: number, limit = 10, offset = 0): Promise<{
-    data: Payment[];
-    total: number;
-    page: number;
-    totalPages: number;
-  }> {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(payments)
-      .where(eq(payments.serviceRequestId, requestId));
-
-    const data = await db
+  async getPaymentsByRequest(requestId: number): Promise<Payment[]> {
+    const result = await db
       .select()
       .from(payments)
-      .where(eq(payments.serviceRequestId, requestId))
-      .limit(limit)
-      .offset(offset)
-      .orderBy(payments.created);
-
-    return {
-      data,
-      total: count,
-      page: Math.floor(offset / limit) + 1,
-      totalPages: Math.ceil(count / limit)
-    };
+      .where(eq(payments.serviceRequestId, requestId));
+    return result;
   }
 
   async getUserPayments(userId: number, limit = 10, offset = 0): Promise<{
