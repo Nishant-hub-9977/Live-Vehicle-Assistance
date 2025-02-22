@@ -12,12 +12,20 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Calendar, Clock, AlertCircle, Car, Wrench, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { LocationPicker } from "@/components/maps/location-picker";
+import { ServiceTracker } from "@/components/maps/service-tracker";
+import { type Mechanic } from "@shared/schema";
+
 
 export default function DashboardClient() {
   const { toast } = useToast();
 
   const { data: requests, isLoading: isLoadingRequests } = useQuery<ServiceRequest[]>({
     queryKey: ["/api/service-requests"],
+  });
+
+  const { data: activeMechanic } = useQuery<Mechanic>({
+    queryKey: ["/api/mechanics", activeRequest?.mechanicId],
+    enabled: !!activeRequest?.mechanicId,
   });
 
   const form = useForm({
@@ -62,35 +70,44 @@ export default function DashboardClient() {
         <div className="space-y-8">
           {/* Active Request Status */}
           {activeRequest ? (
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Car className="h-5 w-5" />
-                  Active Service Request
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className={`px-3 py-1 rounded-full text-xs text-white font-medium ${
-                      statusColors[activeRequest.status as keyof typeof statusColors]
-                    }`}>
-                      {activeRequest.status.toUpperCase()}
-                    </span>
+            <div className="space-y-8">
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Car className="h-5 w-5" />
+                    Active Service Request
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className={`px-3 py-1 rounded-full text-xs text-white font-medium ${
+                        statusColors[activeRequest.status as keyof typeof statusColors]
+                      }`}>
+                        {activeRequest.status.toUpperCase()}
+                      </span>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {format(new Date(activeRequest.created), "HH:mm")}
+                      </div>
+                    </div>
+                    <p className="text-sm">{activeRequest.description}</p>
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {format(new Date(activeRequest.created), "HH:mm")}
+                      <MapPin className="h-4 w-4 mr-1" />
+                      Current Location
                     </div>
                   </div>
-                  <p className="text-sm">{activeRequest.description}</p>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    Current Location
-                  </div>
-                  {/* Add map component here to show active request location */}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Service Tracking Map */}
+              {activeRequest.status !== 'pending' && (
+                <ServiceTracker 
+                  serviceRequest={activeRequest}
+                  mechanicLocation={activeMechanic?.activeLocation}
+                />
+              )}
+            </div>
           ) : (
             <Card>
               <CardHeader>
