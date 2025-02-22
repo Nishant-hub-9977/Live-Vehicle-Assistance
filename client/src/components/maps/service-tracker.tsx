@@ -45,6 +45,8 @@ interface ServiceTrackerProps {
   isMechanic?: boolean;
 }
 
+const libraries: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ["places"];
+
 export function ServiceTracker({ 
   serviceRequest, 
   mechanicLocation, 
@@ -59,11 +61,11 @@ export function ServiceTracker({
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY!,
-    libraries: ["places"]
+    libraries
   });
 
   const calculateRoute = useCallback(async () => {
-    if (!mechanicLocation) return;
+    if (!mechanicLocation || !isLoaded) return;
 
     const directionsService = new google.maps.DirectionsService();
 
@@ -84,13 +86,13 @@ export function ServiceTracker({
     } catch (error) {
       console.error("Error calculating route:", error);
     }
-  }, [mechanicLocation, serviceRequest.location]);
+  }, [mechanicLocation, serviceRequest.location, isLoaded]);
 
   useEffect(() => {
-    if (mechanicLocation) {
+    if (mechanicLocation && isLoaded) {
       calculateRoute();
     }
-  }, [mechanicLocation, calculateRoute]);
+  }, [mechanicLocation, calculateRoute, isLoaded]);
 
   // Real-time location tracking for mechanics
   useEffect(() => {
