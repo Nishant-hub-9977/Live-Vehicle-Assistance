@@ -1,6 +1,6 @@
 import { IStorage } from "./types";
 import { db } from "./db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { users, serviceRequests, mechanics, vehicles, payments, reviews } from "@shared/schema";
 import type { User, InsertUser, ServiceRequest, InsertServiceRequest, Mechanic, InsertMechanic, Vehicle, InsertVehicle, Payment, InsertPayment, Review, InsertReview } from "@shared/schema";
 import session from "express-session";
@@ -60,18 +60,40 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(vehicles).where(eq(vehicles.userId, userId));
   }
 
-  // Service Requests
+  // Service Requests with Pagination
   async createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest> {
     const [serviceRequest] = await db.insert(serviceRequests).values(request).returning();
     return serviceRequest;
   }
 
-  async getServiceRequests(userId: number, role: string): Promise<ServiceRequest[]> {
-    if (role === 'admin') {
-      return await db.select().from(serviceRequests);
-    }
+  async getServiceRequests(userId: number, role: string, limit = 10, offset = 0): Promise<{
+    data: ServiceRequest[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
     const field = role === 'client' ? serviceRequests.clientId : serviceRequests.mechanicId;
-    return await db.select().from(serviceRequests).where(eq(field, userId));
+    const condition = role === 'admin' ? sql`TRUE` : eq(field, userId);
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(serviceRequests)
+      .where(condition);
+
+    const data = await db
+      .select()
+      .from(serviceRequests)
+      .where(condition)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(serviceRequests.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
   async updateServiceRequest(id: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest> {
@@ -105,18 +127,70 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getPendingMechanics(): Promise<Mechanic[]> {
-    return await db.select().from(mechanics).where(eq(mechanics.approved, false));
+  async getPendingMechanics(limit = 10, offset = 0): Promise<{
+    data: Mechanic[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(mechanics)
+      .where(eq(mechanics.approved, false));
+
+    const data = await db
+      .select()
+      .from(mechanics)
+      .where(eq(mechanics.approved, false))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(mechanics.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
-  async getAvailableMechanics(): Promise<Mechanic[]> {
-    return await db.select().from(mechanics).where(
-      and(
-        eq(mechanics.approved, true),
-        eq(mechanics.availability, true)
+  async getAvailableMechanics(limit = 10, offset = 0): Promise<{
+    data: Mechanic[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(mechanics)
+      .where(
+        and(
+          eq(mechanics.approved, true),
+          eq(mechanics.availability, true)
+        )
+      );
+
+    const data = await db
+      .select()
+      .from(mechanics)
+      .where(
+        and(
+          eq(mechanics.approved, true),
+          eq(mechanics.availability, true)
+        )
       )
-    );
+      .limit(limit)
+      .offset(offset)
+      .orderBy(mechanics.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
+
 
   // Reviews and Ratings
   async createReview(review: InsertReview): Promise<Review> {
@@ -124,8 +198,31 @@ export class DatabaseStorage implements IStorage {
     return newReview;
   }
 
-  async getReviews(userId: number): Promise<Review[]> {
-    return await db.select().from(reviews).where(eq(reviews.toUserId, userId));
+  async getReviews(userId: number, limit = 10, offset = 0): Promise<{
+    data: Review[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reviews)
+      .where(eq(reviews.toUserId, userId));
+
+    const data = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.toUserId, userId))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(reviews.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
   // Payment Tracking
@@ -139,20 +236,64 @@ export class DatabaseStorage implements IStorage {
     return payment;
   }
 
-  async getPaymentsByRequest(requestId: number): Promise<Payment[]> {
-    return await db.select().from(payments).where(eq(payments.serviceRequestId, requestId));
+  async getPaymentsByRequest(requestId: number, limit = 10, offset = 0): Promise<{
+    data: Payment[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(payments)
+      .where(eq(payments.serviceRequestId, requestId));
+
+    const data = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.serviceRequestId, requestId))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(payments.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
-  async getUserPayments(userId: number): Promise<Payment[]> {
+  async getUserPayments(userId: number, limit = 10, offset = 0): Promise<{
+    data: Payment[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
     const userRequests = await this.getServiceRequests(userId, 'client');
-    if (!userRequests.length) return [];
-    const requestIds = userRequests.map(req => req.id);
-    return await db
+    if (!userRequests.data.length) return { data: [], total: 0, page: 1, totalPages: 0 };
+    const requestIds = userRequests.data.map(req => req.id);
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(payments)
+      .where(
+        sql`serviceRequestId IN (${sql.join(requestIds, ',')})`
+      );
+    const data = await db
       .select()
       .from(payments)
       .where(
-        eq(payments.serviceRequestId, requestIds[0])
-      );
+        sql`serviceRequestId IN (${sql.join(requestIds, ',')})`
+      )
+      .limit(limit)
+      .offset(offset)
+      .orderBy(payments.created);
+
+    return {
+      data,
+      total: count,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 }
 

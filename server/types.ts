@@ -15,9 +15,14 @@ export interface IStorage {
   getVehicle(id: number): Promise<Vehicle | undefined>;
   getVehiclesByUser(userId: number): Promise<Vehicle[]>;
 
-  // Service Requests
+  // Service Requests with Pagination
   createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest>;
-  getServiceRequests(userId: number, role: string): Promise<ServiceRequest[]>;
+  getServiceRequests(userId: number, role: string, limit?: number, offset?: number): Promise<{
+    data: ServiceRequest[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
   updateServiceRequest(id: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest>;
 
   // Mechanic Management
@@ -25,15 +30,30 @@ export interface IStorage {
   getMechanic(userId: number): Promise<Mechanic | undefined>;
   updateMechanic(id: number, updates: Partial<Mechanic>): Promise<Mechanic>;
   getPendingMechanics(): Promise<Mechanic[]>;
-  getAvailableMechanics(): Promise<Mechanic[]>;
+  getAvailableMechanics(limit?: number, offset?: number): Promise<{
+    data: Mechanic[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
 
   // Reviews and Ratings
   createReview(review: InsertReview): Promise<Review>;
-  getReviews(userId: number): Promise<Review[]>;
+  getReviews(userId: number, limit?: number, offset?: number): Promise<{
+    data: Review[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
 
   // Payment Tracking
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPayment(id: number): Promise<Payment | undefined>;
   getPaymentsByRequest(requestId: number): Promise<Payment[]>;
-  getUserPayments(userId: number): Promise<Payment[]>;
+  getUserPayments(userId: number, limit?: number, offset?: number): Promise<{
+    data: Payment[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
 }
