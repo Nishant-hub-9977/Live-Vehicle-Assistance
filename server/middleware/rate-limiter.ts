@@ -1,4 +1,4 @@
-import { RateLimiterMemory } from 'rate-limiter-flexible';
+import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import type { Request, Response, NextFunction } from 'express';
 
 // Use in-memory rate limiting for development
@@ -15,11 +15,13 @@ export async function rateLimiterMiddleware(
   res: Response,
   next: NextFunction
 ) {
+  const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+
   try {
-    await rateLimiter.consume(req.ip);
+    await rateLimiter.consume(clientIp);
     next();
-  } catch (rejRes) {
-    const retryAfter = Math.ceil(rejRes.msBeforeNext / 1000) || 60;
+  } catch (rejRes: any) {
+    const retryAfter = Math.ceil((rejRes as RateLimiterRes).msBeforeNext / 1000) || 60;
     res.set('Retry-After', String(retryAfter));
     res.status(429).json({ 
       error: 'Too Many Requests',

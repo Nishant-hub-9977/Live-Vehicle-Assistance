@@ -17,8 +17,24 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Security headers
-  app.use(helmet());
+  // Security headers with CSP configuration
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://maps.googleapis.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        connectSrc: ["'self'", "https://maps.googleapis.com", "https://api.mapbox.com"],
+        frameSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }));
 
   // Compression
   app.use(compression());
@@ -26,13 +42,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rate limiting
   app.use(rateLimiterMiddleware);
 
-  // Request logging
+  // Request logging with proper formatting
   app.use((req, res, next) => {
     logger.info({
       method: req.method,
       path: req.path,
       ip: req.ip,
-      userId: req.user?.id
+      userId: req.user?.id,
+      timestamp: new Date().toISOString(),
+      headers: {
+        'user-agent': req.headers['user-agent'],
+        'accept-language': req.headers['accept-language'],
+      }
     });
     next();
   });
