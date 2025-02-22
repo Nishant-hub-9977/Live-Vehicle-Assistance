@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Navigation } from "lucide-react";
+import { Loader2, Navigation, MapPin, AlertTriangle, RefreshCcw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import type { ServiceRequest } from "@shared/schema";
 
@@ -56,7 +57,9 @@ export function ServiceTracker({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [eta, setEta] = useState<string>("");
   const [isTracking, setIsTracking] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { theme } = useTheme();
+  const { toast } = useToast();
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -85,8 +88,13 @@ export function ServiceTracker({
       }
     } catch (error) {
       console.error("Error calculating route:", error);
+      toast({
+        title: "Route Calculation Failed",
+        description: "Unable to calculate the route at this time. Please try again later.",
+        variant: "destructive",
+      });
     }
-  }, [mechanicLocation, serviceRequest.location, isLoaded]);
+  }, [mechanicLocation, serviceRequest.location, isLoaded, toast]);
 
   useEffect(() => {
     if (mechanicLocation && isLoaded) {
@@ -109,6 +117,11 @@ export function ServiceTracker({
       (error) => {
         console.error("Error tracking location:", error);
         setIsTracking(false);
+        toast({
+          title: "Location Tracking Error",
+          description: "Unable to track your location. Please check your device settings.",
+          variant: "destructive",
+        });
       },
       {
         enableHighAccuracy: true,
@@ -120,20 +133,70 @@ export function ServiceTracker({
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [isMechanic, isTracking, onMechanicLocationUpdate]);
+  }, [isMechanic, isTracking, onMechanicLocationUpdate, toast]);
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    window.location.reload();
+  };
+
+  // Fallback UI for map load error
   if (loadError) {
     return (
-      <Card className="p-4 text-destructive">
-        Error loading map. Please try again later.
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-center text-destructive">
+          <AlertTriangle className="h-12 w-12" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="font-semibold text-lg">Map Loading Failed</h3>
+          <p className="text-muted-foreground">
+            {loadError.message || "Unable to load the map. Please check your internet connection."}
+          </p>
+        </div>
+        <div className="space-y-4">
+          <div className="p-4 bg-secondary rounded-lg space-y-2">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span className="font-medium">Service Location:</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Latitude: {serviceRequest.location.lat.toFixed(6)}<br />
+              Longitude: {serviceRequest.location.lng.toFixed(6)}
+            </p>
+          </div>
+          {mechanicLocation && (
+            <div className="p-4 bg-secondary rounded-lg space-y-2">
+              <div className="flex items-center gap-2">
+                <Navigation className="h-4 w-4 text-primary" />
+                <span className="font-medium">Mechanic Location:</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Latitude: {mechanicLocation.lat.toFixed(6)}<br />
+                Longitude: {mechanicLocation.lng.toFixed(6)}
+              </p>
+            </div>
+          )}
+        </div>
+        <Button 
+          className="w-full"
+          onClick={handleRetry}
+          disabled={retryCount >= 3}
+        >
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          {retryCount >= 3 ? "Please try again later" : "Retry Loading Map"}
+        </Button>
       </Card>
     );
   }
 
+  // Loading state
   if (!isLoaded) {
     return (
       <Card className="p-4 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="text-center space-y-2">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
       </Card>
     );
   }
